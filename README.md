@@ -9,7 +9,9 @@
 
 ## About this fork
 
-This fork has 2 branches. Its master is left intact to sync with upstream frappe gantt and most of my customization to happen in dev branch. This way, I can keep this fork synced with original in master branch, and handle all merge conflicts in my dev branch. Any one interested in features in my dev branch, could use the same. I forked because I needed quick customizations, which may not be polished for proper PR to original frappe gantt. 
+I forked because I needed quick customizations, which may not be polished for proper PR to original frappe gantt. 
+
+This fork has 2 branches. Its `master` is left intact to sync with upstream frappe gantt and most of my customization to happen in `dev` branch. This way, I can keep this fork synced with original in `master` branch, and handle all merge conflicts in my `dev` branch. Any one interested in extra features of this fork, please use the `dev` branch. 
 
 ![Fork Setup](.github/fork-setup.jpg)
 
