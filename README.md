@@ -5,18 +5,15 @@
 **A modern, configurable, Gantt library for the web.**
 </div>
 
+![Hero Image](.github/hero-image.png)
 
-## Note
+## About this fork
 
 This fork has 2 branches. Its master is left intact to sync with upstream frappe gantt and most of my customization to happen in dev branch. This way, I can keep this fork synced with original in master branch, and handle all merge conflicts in my dev branch. Any one interested in features in my dev branch, could use the same. I forked because I needed quick customizations, which may not be polished for proper PR to original frappe gantt. 
 
 ![Fork Setup](.github/fork-setup.jpg)
 
 [Source2Edit](https://viewer.diagrams.net/?tags=%7B%7D&highlight=0000ff&edit=_blank&layers=1&nav=1&title=Untitled%20Diagram.drawio#R7ZpNd%2BIgFIZ%2FjcvOSUiCybK1dmbR6cbFTJc0uSaZIZJB1Di%2FfohCPhpr03OqpE67KbwX5OPywAUdOZOs%2BMpJnnxnEdARsqJi5NyOELJd25f%2FSmW7V3xk7YWYp5EqVAuz9C8oURdbpREsWwUFY1SkeVsM2WIBoWhphHO2aRebM9puNScxdIRZSGhX%2FZFGIlGqbVm14RukcaKa9rUhI7qwEpYJidimITnTkTPhjIl9KismQMvJ0%2FOyr3f3grXqGIeF6FMBT69ClD%2Bsg1mW3T%2F82TjXV97VWPVNbPWAIZLjV1nGRcJitiB0Wqs3nK0WEZSfaslcXeaesVyKthR%2FgRBb5UyyEkxKicioskKRip9l9S%2Beyj02LLeF%2BuRdZqszC8G3jUpl9rFpq6vtcrrefnzloF6cNiUt2YqHcGSukFp%2BhMcgjpTDlXMlFcAykP2R9ThQItJ1ux9ELc%2B4Kld7UCaUE9%2FgUNXJNaEr1dJcgpnL9PWoXCCYyq7fPMlEXCYyshTAtSxbrCydhdF2%2ByZJBcxyspuxjWyi7eJ5SumEUcZ3dZ2IgD8Ppb4UnP2GhgWHPjzNq%2FbWwAUUx13VnVpdASvUts%2Fymwa5Wksa0LrWibxh251pHChf78iJ05MT2zrszfOA4nRAkWMVSYoCFBiGxQM%2Fcg%2FB4qMnB%2BP3gcW1hgYLcozAYv5g8foCMzYJjPd2YCJYXwgt2B0aLcFHOVkGABjuCZhvki8bm%2FSo3fBn7d3XPNryZ%2B3eFzzaIdSSf3d3lUVfsJAZ75uNR3Bne%2B0uB0rltRde3yLJMt%2FfhedpUS4OM%2BF4dfNVeyY6sGe6Z43GvU%2FCTkKY35cwZJIw%2F%2BIJc4wTZiaE%2F5hRiX7iHDg2yOgbhpFdE%2BPJxKotJ9o1%2B%2Fvf6L1Pd%2FM8%2B%2BZ53j7wwCIT9P%2FF%2FmdirO%2BjPTIa%2FOtuXjBjxmOTQ1P6GZscPXL6nE1m30zGF8fN2Bra2eR%2BctOfm95X4cAoN2e9CxvhxnFNc2P0tcnQd7928DHireDi17%2BLTK%2F%2Fy7s3Pp9jzzrZHMts%2FdOwna3xAztn%2Bg8%3D)
-
-
-
-![Hero Image](.github/hero-image.png)
 
 ## Frappe Gantt
 Gantt charts are bar charts that visually illustrate a project's tasks, schedule, and dependencies. With Frappe Gantt, you can build beautiful, customizable, Gantt charts with ease.
