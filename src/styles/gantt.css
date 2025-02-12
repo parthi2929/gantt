@@ -274,6 +274,13 @@
         transition: stroke-width 0.3s ease;
     }
 
+    /* New styling for the baseline bar */
+    & .bar-baseline {
+        fill: #aaa;        /* or any color you like */
+        opacity: 0.7;      /* semitransparent to differentiate from the actual bar */
+        pointer-events: none; /* so that mouse events pass through */
+    }
+
     & .bar-progress {
         fill: var(--g-progress-color);
         border-radius: 4px;
@@ -282,7 +289,7 @@
     & .bar-expected-progress {
         fill: var(--g-expected-progress);
     }
-
+    
     & .bar-invalid {
         fill: transparent;
         stroke: var(--g-bar-border);

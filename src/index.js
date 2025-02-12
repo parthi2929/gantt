@@ -130,6 +130,12 @@ export default class Gantt {
                 }
 
                 task._start = date_utils.parse(task.start);
+                if (task.baseline_start) {
+                    task._baseline_start = date_utils.parse(task.baseline_start);
+                }
+                if (task.baseline_end) {
+                    task._baseline_end = date_utils.parse(task.baseline_end);
+                }
                 if (task.end === undefined && task.duration !== undefined) {
                     task.end = task._start;
                     let durations = task.duration.split(' ');

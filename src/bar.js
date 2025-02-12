@@ -20,6 +20,7 @@ export default class Bar {
 
         this.prepare_values();
         this.draw();
+        this.draw_baseline_bar();  // Draw baseline if available
         this.bind();
     }
 
@@ -85,8 +86,8 @@ export default class Bar {
         this.compute_expected_progress();
         this.expected_progress_width =
             this.gantt.options.column_width *
-                this.duration *
-                (this.expected_progress / 100) || 0;
+            this.duration *
+            (this.expected_progress / 100) || 0;
     }
 
     draw() {
@@ -324,6 +325,42 @@ export default class Bar {
         }
     }
 
+    /**
+     * Draw a baseline bar if the task has planned (baseline) dates.
+     */
+    draw_baseline_bar() {
+        // Check whether the task object has baseline dates
+        if (!this.task.baseline_start || !this.task.baseline_end) return;
+
+        // Parse the baseline dates (using the existing date utility)
+        const baselineStart = date_utils.parse(this.task.baseline_start);
+        const baselineEnd = date_utils.parse(this.task.baseline_end);
+
+        // Compute x position for the baseline bar.
+        // This is similar to compute_x() but using the baseline start.
+        const diffStart = date_utils.diff(baselineStart, this.gantt.gantt_start, this.gantt.config.unit) / this.gantt.config.step;
+        const baseline_x = diffStart * this.gantt.config.column_width;
+
+        // Compute baseline duration (width)
+        const diffDuration = date_utils.diff(baselineEnd, baselineStart, this.gantt.config.unit) / this.gantt.config.step;
+        const baseline_width = diffDuration * this.gantt.config.column_width;
+
+        // Position: we want to render a thin bar (e.g. height 4)
+        // and position it on top of the task bar. You can adjust offsets as needed.
+        const baseline_y = this.y + 2; // a slight offset from the top
+
+        // Create the baseline bar element:
+        this.baseline_bar = createSVG('rect', {
+            x: baseline_x,
+            y: baseline_y,
+            width: baseline_width,
+            height: 4, // a small height for the baseline indicator
+            class: 'bar-baseline', // add your custom CSS class here
+            append_to: this.bar_group, // Draw in the same SVG group as the task bar
+        });
+    }
+
+
     bind() {
         if (this.invalid) return;
         this.setup_click_event();
@@ -528,7 +565,7 @@ export default class Bar {
             this.gantt.config.ignored_positions.reduce((acc, val) => {
                 return acc + (val >= this.x && val <= progress_area);
             }, 0) *
-                this.gantt.config.column_width;
+            this.gantt.config.column_width;
         if (progress < 0) return 0;
         const total =
             this.$bar.getWidth() -
@@ -642,8 +679,8 @@ export default class Bar {
         this.$expected_bar_progress.setAttribute(
             'width',
             this.gantt.config.column_width *
-                this.actual_duration_raw *
-                (this.expected_progress / 100) || 0,
+            this.actual_duration_raw *
+            (this.expected_progress / 100) || 0,
         );
     }
 
