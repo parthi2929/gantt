@@ -331,33 +331,41 @@ export default class Bar {
     draw_baseline_bar() {
         // Check whether the task object has baseline dates
         if (!this.task.baseline_start || !this.task.baseline_end) return;
-
+    
         // Parse the baseline dates (using the existing date utility)
         const baselineStart = date_utils.parse(this.task.baseline_start);
         const baselineEnd = date_utils.parse(this.task.baseline_end);
-
+    
         // Compute x position for the baseline bar.
         // This is similar to compute_x() but using the baseline start.
-        const diffStart = date_utils.diff(baselineStart, this.gantt.gantt_start, this.gantt.config.unit) / this.gantt.config.step;
+        const diffStart =
+            date_utils.diff(baselineStart, this.gantt.gantt_start, this.gantt.config.unit) /
+            this.gantt.config.step;
         const baseline_x = diffStart * this.gantt.config.column_width;
-
+    
         // Compute baseline duration (width)
-        const diffDuration = date_utils.diff(baselineEnd, baselineStart, this.gantt.config.unit) / this.gantt.config.step;
+        const diffDuration =
+            date_utils.diff(baselineEnd, baselineStart, this.gantt.config.unit) /
+            this.gantt.config.step;
         const baseline_width = diffDuration * this.gantt.config.column_width;
-
-        // Position: we want to render a thin bar (e.g. height 4)
-        // and position it on top of the task bar. You can adjust offsets as needed.
-        const baseline_y = this.y + 2; // a slight offset from the top
-
-        // Create the baseline bar element:
+    
+        // Position: a slight vertical offset (adjust as needed)
+        const baseline_y = this.y - 7;
+        const baseline_height = 25;
+    
+        // Create the baseline bar element.
+        // Notice we exclude the 'append_to' property to avoid automatic appending.
         this.baseline_bar = createSVG('rect', {
             x: baseline_x,
             y: baseline_y,
             width: baseline_width,
-            height: 4, // a small height for the baseline indicator
-            class: 'bar-baseline', // add your custom CSS class here
-            append_to: this.bar_group, // Draw in the same SVG group as the task bar
+            height: baseline_height,
+            class: 'bar-baseline',
         });
+    
+        // Insert the baseline bar as the first child of the bar_group,
+        // so it appears behind the task bar and its other elements.
+        this.bar_group.insertBefore(this.baseline_bar, this.bar_group.firstChild);
     }
 
 
