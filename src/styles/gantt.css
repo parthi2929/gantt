@@ -364,4 +364,17 @@
         }
     }
 
+    & .baseline-arrow {
+        fill: none;
+        stroke: #aaa;
+        stroke-width: 1.5;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+
+        &:hover {
+            opacity: 1;
+            stroke-width: 2;
+        }
+    }
+
 }

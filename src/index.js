@@ -1,7 +1,7 @@
 import date_utils from './date_utils';
 import { $, createSVG } from './svg_utils';
 
-import Arrow from './arrow';
+import Arrow, { BaselineArrow } from './arrow';  // Update this line
 import Bar from './bar';
 import Popup from './popup';
 
@@ -41,7 +41,7 @@ export default class Gantt {
         } else {
             throw new TypeError(
                 'Frappe Gantt only supports usage of a string CSS selector,' +
-                    " HTML DOM element or SVG DOM element for the 'element' parameter",
+                " HTML DOM element or SVG DOM element for the 'element' parameter",
             );
         }
 
@@ -403,10 +403,10 @@ export default class Gantt {
         const grid_width = this.dates.length * this.config.column_width;
         const grid_height = Math.max(
             this.config.header_height +
-                this.options.padding +
-                (this.options.bar_height + this.options.padding) *
-                    this.tasks.length -
-                10,
+            this.options.padding +
+            (this.options.bar_height + this.options.padding) *
+            this.tasks.length -
+            10,
             this.options.container_height !== 'auto'
                 ? this.options.container_height
                 : 0,
@@ -884,6 +884,28 @@ export default class Gantt {
                 .filter(Boolean); // filter falsy values
             this.arrows = this.arrows.concat(arrows);
         }
+
+        // Create baseline arrows
+        this.baseline_arrows = [];
+        for (let task of this.tasks) {
+            if (!task.baseline_start || !task.baseline_end) continue;
+            
+            let baseline_arrows = task.dependencies
+                .map((task_id) => {
+                    const dependency = this.get_task(task_id);
+                    if (!dependency?.baseline_start || !dependency?.baseline_end) return;
+                    
+                    const arrow = new BaselineArrow(
+                        this,
+                        this.bars[dependency._index],
+                        this.bars[task._index]
+                    );
+                    this.layers.arrow.appendChild(arrow.element);
+                    return arrow;
+                })
+                .filter(Boolean);
+            this.baseline_arrows = this.baseline_arrows.concat(baseline_arrows);
+        }
     }
 
     map_arrows_on_bars() {
@@ -895,6 +917,16 @@ export default class Gantt {
                 );
             });
         }
+        // Map baseline arrows
+        for (let bar of this.bars) {
+            bar.baseline_arrows = this.baseline_arrows.filter((arrow) => {
+                return (
+                    arrow.from_task.task.id === bar.task.id ||
+                    arrow.to_task.task.id === bar.task.id
+                );
+            });
+        }
+
     }
 
     set_dimensions() {
@@ -963,7 +995,7 @@ export default class Gantt {
         this.current_date = date_utils.add(
             this.gantt_start,
             (this.$container.scrollLeft + $el.clientWidth) /
-                this.config.column_width,
+            this.config.column_width,
             this.config.unit,
         );
         current_upper = this.config.view_mode.upper_text(
@@ -988,13 +1020,13 @@ export default class Gantt {
         let current = new Date(),
             el = this.$container.querySelector(
                 '.date_' +
-                    sanitize(
-                        date_utils.format(
-                            current,
-                            this.config.date_format,
-                            this.options.language,
-                        ),
+                sanitize(
+                    date_utils.format(
+                        current,
+                        this.config.date_format,
+                        this.options.language,
                     ),
+                ),
             );
 
         // safety check to prevent infinite loop
@@ -1003,13 +1035,13 @@ export default class Gantt {
             current = date_utils.add(current, -1, this.config.unit);
             el = this.$container.querySelector(
                 '.date_' +
-                    sanitize(
-                        date_utils.format(
-                            current,
-                            this.config.date_format,
-                            this.options.language,
-                        ),
+                sanitize(
+                    date_utils.format(
+                        current,
+                        this.config.date_format,
+                        this.options.language,
                     ),
+                ),
             );
             c++;
         }
@@ -1168,9 +1200,9 @@ export default class Gantt {
                 if (
                     !extended &&
                     e.currentTarget.scrollWidth -
-                        (e.currentTarget.scrollLeft +
-                            e.currentTarget.clientWidth) <=
-                        trigger
+                    (e.currentTarget.scrollLeft +
+                        e.currentTarget.clientWidth) <=
+                    trigger
                 ) {
                     let old_scroll_left = e.currentTarget.scrollLeft;
                     extended = true;
@@ -1201,7 +1233,7 @@ export default class Gantt {
             this.current_date = date_utils.add(
                 this.gantt_start,
                 (e.currentTarget.scrollLeft / this.config.column_width) *
-                    this.config.step,
+                this.config.step,
                 this.config.unit,
             );
 
@@ -1219,7 +1251,7 @@ export default class Gantt {
                 this.gantt_start,
                 ((e.currentTarget.scrollLeft + $el.clientWidth) /
                     this.config.column_width) *
-                    this.config.step,
+                this.config.step,
                 this.config.unit,
             );
             current_upper = this.config.view_mode.upper_text(

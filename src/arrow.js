@@ -1,6 +1,6 @@
 import { createSVG } from './svg_utils';
 
-export default class Arrow {
+export class Arrow {
     constructor(gantt, from_task, to_task) {
         this.gantt = gantt;
         this.from_task = from_task;
@@ -101,3 +101,99 @@ export default class Arrow {
         this.element.setAttribute('d', this.path);
     }
 }
+
+export class BaselineArrow extends Arrow {
+    constructor(gantt, from_task, to_task) {
+        super(gantt, from_task, to_task);
+        this.element.classList.add('baseline-arrow'); // Add specific class for styling
+    }
+
+    calculate_path() {
+        if (!this.from_task.baseline_bar || !this.to_task.baseline_bar) {
+            this.path = ''; // Set empty path if baseline bars don't exist
+            return;
+        }
+
+        let start_x = +this.from_task.baseline_bar.getAttribute('x') + 
+                     +this.from_task.baseline_bar.getAttribute('width') / 2;
+
+        const condition = () =>
+            +this.to_task.baseline_bar.getAttribute('x') < start_x + this.gantt.options.padding &&
+            start_x > +this.from_task.baseline_bar.getAttribute('x') + this.gantt.options.padding;
+
+        while (condition()) {
+            start_x -= 10;
+        }
+        start_x -= 10;
+
+        let start_y = +this.from_task.baseline_bar.getAttribute('y') + 
+                     +this.from_task.baseline_bar.getAttribute('height') / 2;
+        let end_x = +this.to_task.baseline_bar.getAttribute('x') - 13;
+        let end_y = +this.to_task.baseline_bar.getAttribute('y') + 
+                   +this.to_task.baseline_bar.getAttribute('height') / 2;
+
+        const from_is_below_to =
+            this.from_task.task._index > this.to_task.task._index;
+
+        let curve = this.gantt.options.arrow_curve;
+        const clockwise = from_is_below_to ? 1 : 0;
+        let curve_y = from_is_below_to ? -curve : curve;
+
+        if (
+            +this.to_task.baseline_bar.getAttribute('x') <=
+            +this.from_task.baseline_bar.getAttribute('x') + this.gantt.options.padding
+        ) {
+            let down_1 = this.gantt.options.padding / 2 - curve;
+            if (down_1 < 0) {
+                down_1 = 0;
+                curve = this.gantt.options.padding / 2;
+                curve_y = from_is_below_to ? -curve : curve;
+            }
+            const down_2 =
+                +this.to_task.baseline_bar.getAttribute('y') +
+                +this.to_task.baseline_bar.getAttribute('height') / 2 -
+                curve_y;
+            const left = +this.to_task.baseline_bar.getAttribute('x') - this.gantt.options.padding;
+            
+            this.path = `
+                M ${start_x} ${start_y}
+                v ${down_1}
+                a ${curve} ${curve} 0 0 1 ${-curve} ${curve}
+                H ${left}
+                a ${curve} ${curve} 0 0 ${clockwise} ${-curve} ${curve_y}
+                V ${down_2}
+                a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve_y}
+                L ${end_x} ${end_y}
+                m -5 -5
+                l 5 5
+                l -5 5`;
+        } else {
+            if (end_x < start_x + curve) {
+                curve = end_x - start_x;
+            }
+
+            let offset = from_is_below_to ? end_y + curve : end_y - curve;
+
+            this.path = `
+                M ${start_x} ${start_y}
+                V ${offset}
+                a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve}
+                L ${end_x} ${end_y}
+                m -5 -5
+                l 5 5
+                l -5 5`;
+        }
+    }
+
+    update() {
+        if (!this.from_task.baseline_bar || !this.to_task.baseline_bar) {
+            this.element.style.display = 'none';
+            return;
+        }
+        this.element.style.display = '';
+        this.calculate_path();
+        this.element.setAttribute('d', this.path);
+    }
+}
+
+export default Arrow;  // Keep the default export for backward compatibility

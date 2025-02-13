@@ -6,6 +6,7 @@ export default class Bar {
         this.set_defaults(gantt, task);
         this.prepare_wrappers();
         this.prepare_helpers();
+        this.baseline_arrows = [];  // for baseline bar arrows
         this.refresh();
     }
 
@@ -404,22 +405,47 @@ export default class Bar {
     }
 
     update_baseline_position({ x = null, width = null } = {}) {
-        // Update the baseline bar’s x and/or width attributes if valid
+        // First validate dependencies if we're changing x position
         if (x !== null) {
+            // Get x positions of all dependent baseline bars
+            const xs = this.task.dependencies.map((dep) => {
+                const bar = this.gantt.get_bar(dep);
+                // Only consider dependencies that have baseline bars
+                return bar.baseline_bar ? +bar.baseline_bar.getAttribute('x') : null;
+            });
+
+            // Validate that we're not moving before any dependencies
+            const valid_x = xs.reduce((prev, curr) => {
+                return prev && (curr === null || x >= curr);
+            }, true);
+
+            // If invalid position, don't update
+            if (!valid_x) return;
+
             this.baseline_bar.setAttribute('x', x);
         }
+
+        // Update width if provided and valid
         if (width && width > 0) {
             this.baseline_bar.setAttribute('width', width);
         }
-        // Update the baseline handles positions accordingly.
+
+        // Update the baseline handles positions
         const handleWidth = 3;
-        if (this.$baselineHandleLeft)
-            this.$baselineHandleLeft.setAttribute('x', this.baseline_bar.getAttribute('x') - handleWidth / 2);
-        if (this.$baselineHandleRight)
-            this.$baselineHandleRight.setAttribute(
-                'x',
-                (+this.baseline_bar.getAttribute('x') + +this.baseline_bar.getAttribute('width')) - handleWidth / 2
+        if (this.$baselineHandleLeft) {
+            this.$baselineHandleLeft.setAttribute('x',
+                this.baseline_bar.getAttribute('x') - handleWidth / 2
             );
+        }
+        if (this.$baselineHandleRight) {
+            this.$baselineHandleRight.setAttribute('x',
+                (+this.baseline_bar.getAttribute('x') +
+                    +this.baseline_bar.getAttribute('width')) - handleWidth / 2
+            );
+        }
+
+        // Update baseline arrows
+        this.update_baseline_arrow_position();
     }
 
     // Optionally add a method to calculate and trigger a baseline date change event.
@@ -907,6 +933,8 @@ export default class Bar {
             console.log("Baseline operation ended");
             self.baseline_date_changed();
             self._baselineOperation = null;
+            // Update baseline arrows after the operation is complete
+            self.update_baseline_arrow_position();
             // Prevent the click event from triggering
             e.preventDefault();
         }
@@ -920,6 +948,13 @@ export default class Bar {
 
         document.addEventListener("mousemove", mouseMoveHandler);
         document.addEventListener("mouseup", mouseUpHandler);
+    }
+
+    // Add this method
+    update_baseline_arrow_position() {
+        this.baseline_arrows.forEach(arrow => {
+            arrow.update();
+        });
     }
 
 }
