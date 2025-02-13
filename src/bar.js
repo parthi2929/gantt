@@ -331,28 +331,28 @@ export default class Bar {
     draw_baseline_bar() {
         // Check whether the task object has baseline dates
         if (!this.task.baseline_start || !this.task.baseline_end) return;
-    
+
         // Parse the baseline dates (using the existing date utility)
         const baselineStart = date_utils.parse(this.task.baseline_start);
         const baselineEnd = date_utils.parse(this.task.baseline_end);
-    
+
         // Compute x position for the baseline bar.
         // This is similar to compute_x() but using the baseline start.
         const diffStart =
             date_utils.diff(baselineStart, this.gantt.gantt_start, this.gantt.config.unit) /
             this.gantt.config.step;
         const baseline_x = diffStart * this.gantt.config.column_width;
-    
+
         // Compute baseline duration (width)
         const diffDuration =
             date_utils.diff(baselineEnd, baselineStart, this.gantt.config.unit) /
             this.gantt.config.step;
         const baseline_width = diffDuration * this.gantt.config.column_width;
-    
+
         // Position: a slight vertical offset (adjust as needed)
         const baseline_y = this.y - 7;
         const baseline_height = 25;
-    
+
         // Create the baseline bar element.
         // Notice we exclude the 'append_to' property to avoid automatic appending.
         this.baseline_bar = createSVG('rect', {
@@ -362,12 +362,92 @@ export default class Bar {
             height: baseline_height,
             class: 'bar-baseline',
         });
-    
+
         // Insert the baseline bar as the first child of the bar_group,
         // so it appears behind the task bar and its other elements.
         this.bar_group.insertBefore(this.baseline_bar, this.bar_group.firstChild);
+
+        // Create resize handles for the baseline bar
+        this.draw_baseline_resize_handles();
+
+        // baseline task event handling
+        this.bind_baseline_events();
     }
 
+    draw_baseline_resize_handles() {
+        if (!this.baseline_bar) return;
+
+        const handleWidth = 3;
+        // Left handle for baseline resizing
+        this.$baselineHandleLeft = createSVG('rect', {
+            x: +this.baseline_bar.getAttribute('x') - handleWidth / 2,
+            y: +this.baseline_bar.getAttribute('y') + 4, // adjust vertical position as needed
+            width: handleWidth,
+            height: +this.baseline_bar.getAttribute('height') - 8,
+            rx: 2,
+            ry: 2,
+            class: 'handle baseline left',
+            append_to: this.handle_group,
+        });
+
+        // Right handle for baseline resizing
+        this.$baselineHandleRight = createSVG('rect', {
+            x: (+this.baseline_bar.getAttribute('x') + +this.baseline_bar.getAttribute('width')) - handleWidth / 2,
+            y: +this.baseline_bar.getAttribute('y') + 4,
+            width: handleWidth,
+            height: +this.baseline_bar.getAttribute('height') - 8,
+            rx: 2,
+            ry: 2,
+            class: 'handle baseline right',
+            append_to: this.handle_group,
+        });
+    }
+
+    update_baseline_position({ x = null, width = null } = {}) {
+        // Update the baseline bar’s x and/or width attributes if valid
+        if (x !== null) {
+            this.baseline_bar.setAttribute('x', x);
+        }
+        if (width && width > 0) {
+            this.baseline_bar.setAttribute('width', width);
+        }
+        // Update the baseline handles positions accordingly.
+        const handleWidth = 3;
+        if (this.$baselineHandleLeft)
+            this.$baselineHandleLeft.setAttribute('x', this.baseline_bar.getAttribute('x') - handleWidth / 2);
+        if (this.$baselineHandleRight)
+            this.$baselineHandleRight.setAttribute(
+                'x',
+                (+this.baseline_bar.getAttribute('x') + +this.baseline_bar.getAttribute('width')) - handleWidth / 2
+            );
+    }
+
+    // Optionally add a method to calculate and trigger a baseline date change event.
+    // This is similar to date_changed() for the main bar.
+    baseline_date_changed() {
+        const x = +this.baseline_bar.getAttribute('x');
+        const width = +this.baseline_bar.getAttribute('width');
+        const x_in_units = x / this.gantt.config.column_width;
+        // Calculate new baseline start date.
+        let new_baseline_start = date_utils.add(
+            this.gantt.gantt_start,
+            x_in_units * this.gantt.config.step,
+            this.gantt.config.unit
+        );
+        const width_in_units = width / this.gantt.config.column_width;
+        let new_baseline_end = date_utils.add(
+            new_baseline_start,
+            width_in_units * this.gantt.config.step,
+            this.gantt.config.unit
+        );
+
+        // Update the task baseline dates.
+        this.task.baseline_start = new_baseline_start;
+        this.task.baseline_end = new_baseline_end;
+
+        // Trigger an event if needed.
+        this.gantt.trigger_event('baseline_date_change', [this.task, new_baseline_start, new_baseline_end]);
+    }
 
     bind() {
         if (this.invalid) return;
@@ -387,6 +467,9 @@ export default class Bar {
 
         if (this.gantt.options.popup_on === 'click') {
             $.on(this.group, 'mouseup', (e) => {
+                // Don't show popup if we're handling baseline operations
+                if (this._baselineOperation) return;
+
                 const posX = e.offsetX || e.layerX;
                 if (this.$handle_progress) {
                     const cx = +this.$handle_progress.getAttribute('cx');
@@ -758,4 +841,85 @@ export default class Bar {
             arrow.update();
         }
     }
+
+    // baseline tasks event handling.. 
+    bind_baseline_events() {
+        if (!this.baseline_bar) return;
+        const self = this;
+
+        // Handler for dragging the entire baseline bar.
+        function handleMouseDown(e) {
+            console.log("Baseline drag started");
+            e.stopPropagation();  // Prevent event from bubbling up
+            self._baselineInitialMouseX = e.clientX;
+            self._baselineInitialX = +self.baseline_bar.getAttribute("x");
+            self._baselineOperation = "drag";
+            e.preventDefault();
+        }
+
+        // Handler for resizing the baseline bar from the left handle.
+        function handleLeftMouseDown(e) {
+            console.log("Baseline left resize started");
+            e.stopPropagation();  // Prevent event from bubbling up
+            self._baselineInitialMouseX = e.clientX;
+            self._baselineInitialX = +self.baseline_bar.getAttribute("x");
+            self._baselineInitialWidth = +self.baseline_bar.getAttribute("width");
+            self._baselineOperation = "resizeLeft";
+            e.preventDefault();
+        }
+
+        // Handler for resizing the baseline bar from the right handle.
+        function handleRightMouseDown(e) {
+            console.log("Baseline right resize started");
+            e.stopPropagation();  // Prevent event from bubbling up
+            self._baselineInitialMouseX = e.clientX;
+            self._baselineInitialWidth = +self.baseline_bar.getAttribute("width");
+            self._baselineOperation = "resizeRight";
+            e.preventDefault();
+        }
+
+        // Global mousemove handler
+        function mouseMoveHandler(e) {
+            if (!self._baselineOperation) return;
+            e.stopPropagation();  // Prevent event from bubbling up
+            let dx = e.clientX - self._baselineInitialMouseX;
+            if (self._baselineOperation === "drag") {
+                self.update_baseline_position({ x: self._baselineInitialX + dx });
+            } else if (self._baselineOperation === "resizeLeft") {
+                let newX = self._baselineInitialX + dx;
+                let newWidth = self._baselineInitialWidth - dx;
+                if (newWidth < 5) {
+                    newWidth = 5;
+                    newX = self._baselineInitialX + (self._baselineInitialWidth - 5);
+                }
+                self.update_baseline_position({ x: newX, width: newWidth });
+            } else if (self._baselineOperation === "resizeRight") {
+                let newWidth = self._baselineInitialWidth + dx;
+                if (newWidth < 5) newWidth = 5;
+                self.update_baseline_position({ width: newWidth });
+            }
+        }
+
+        // Global mouseup handler
+        function mouseUpHandler(e) {
+            if (!self._baselineOperation) return;
+            e.stopPropagation();  // Prevent event from bubbling up
+            console.log("Baseline operation ended");
+            self.baseline_date_changed();
+            self._baselineOperation = null;
+            // Prevent the click event from triggering
+            e.preventDefault();
+        }
+
+        // Attach event listeners
+        this.baseline_bar.addEventListener("mousedown", handleMouseDown);
+        if (this.$baselineHandleLeft)
+            this.$baselineHandleLeft.addEventListener("mousedown", handleLeftMouseDown);
+        if (this.$baselineHandleRight)
+            this.$baselineHandleRight.addEventListener("mousedown", handleRightMouseDown);
+
+        document.addEventListener("mousemove", mouseMoveHandler);
+        document.addEventListener("mouseup", mouseUpHandler);
+    }
+
 }
