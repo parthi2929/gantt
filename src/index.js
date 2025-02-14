@@ -132,6 +132,18 @@ export default class Gantt {
                 task._start = date_utils.parse(task.start);
                 if (task.baseline_start) {
                     task._baseline_start = date_utils.parse(task.baseline_start);
+
+                    // If baseline_end is undefined but baseline_duration exists
+                    if (task.baseline_end === undefined && task.baseline_duration !== undefined) {
+                        task.baseline_end = task._baseline_start;
+                        let baseline_durations = task.baseline_duration.split(' ');
+
+                        baseline_durations.forEach((tmpDuration) => {
+                            let { duration, scale } = date_utils.parse_duration(tmpDuration);
+                            task.baseline_end = date_utils.add(task.baseline_end, duration, scale);
+                        });
+                    }
+
                 }
                 if (task.baseline_end) {
                     task._baseline_end = date_utils.parse(task.baseline_end);
@@ -889,12 +901,12 @@ export default class Gantt {
         this.baseline_arrows = [];
         for (let task of this.tasks) {
             if (!task.baseline_start || !task.baseline_end) continue;
-            
+
             let baseline_arrows = task.dependencies
                 .map((task_id) => {
                     const dependency = this.get_task(task_id);
                     if (!dependency?.baseline_start || !dependency?.baseline_end) return;
-                    
+
                     const arrow = new BaselineArrow(
                         this,
                         this.bars[dependency._index],
