@@ -68,7 +68,9 @@
     }
 
     & .grid-header {
-        height: calc(var(--gv-lower-header-height) + var(--gv-upper-header-height) + 10px);
+        height: calc(
+            var(--gv-lower-header-height) + var(--gv-upper-header-height) + 10px
+        );
         background-color: var(--g-header-background);
         position: sticky;
         top: 0;
@@ -164,7 +166,6 @@
         padding-top: 2px;
         padding-bottom: 2px;
     }
-
     & .side-header select:focus {
         outline: none;
     }
@@ -273,16 +274,6 @@
         transition: stroke-width 0.3s ease;
     }
 
-    /* New styling for the baseline bar */
-    & .bar-baseline {
-        fill: #aaa;
-        /* or any color you like */
-        opacity: 0.7;
-        /* semitransparent to differentiate from the actual bar */
-        pointer-events: all;
-        /* so that mouse events pass through */
-    }
-
     & .bar-progress {
         fill: var(--g-progress-color);
         border-radius: 4px;
@@ -298,7 +289,7 @@
         stroke-width: 1;
         stroke-dasharray: 5;
 
-        &~.bar-label {
+        & ~ .bar-label {
             fill: var(--g-text-light);
         }
     }
@@ -320,7 +311,6 @@
         fill: var(--g-handle-color);
         opacity: 0;
         transition: opacity 0.3s ease;
-
         &.active,
         &.visible {
             cursor: ew-resize;
@@ -332,21 +322,8 @@
         fill: var(--g-text-muted);
     }
 
-    /* Add styling for baseline handles */
-    & .handle.baseline {
-        fill: #666;
-        opacity: 0;
-        cursor: ew-resize;
-        pointer-events: all;
-
-        &:hover,
-        &.active {
-            opacity: 1;
-        }
-    }
-
     & .bar-wrapper {
-        cursor: pointer;
+            cursor: pointer;
 
         & .bar {
             outline: 1px solid var(--g-row-border-color);
@@ -363,18 +340,4 @@
             }
         }
     }
-
-    & .baseline-arrow {
-        fill: none;
-        stroke: #aaa;
-        stroke-width: 1.5;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-
-        &:hover {
-            opacity: 1;
-            stroke-width: 2;
-        }
-    }
-
 }
